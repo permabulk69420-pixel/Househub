@@ -59,6 +59,7 @@ export function createMaterials(renderer) {
     walnut:{base:[91,65,43],tile:[1.2,2.4],roughness:.78,bump:.014},
     travertine:{base:[206,198,178],tile:[1.6,1.6],roughness:.68,bump:.022},
     plaster:{base:[226,224,215],tile:[1,1],roughness:1,bump:.008},
+    ceilingPaint:{base:[232,230,222],tile:[1,1],roughness:.96,bump:.003},
     linen:{base:[202,198,185],tile:[.42,.42],roughness:1,bump:.009},
     rug:{base:[157,151,136],tile:[.55,.55],roughness:1,bump:.009},
     leather:{base:[117,74,45],tile:[.5,.5],roughness:.82,bump:.01},
