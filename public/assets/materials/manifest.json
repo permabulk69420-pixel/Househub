@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "materials": {
     "oak": {
       "baseColor": "oak/wooden_floor_01_diff_2k.jpg",
@@ -22,6 +22,22 @@
       "tileSizeMeters": [1.2, 2.4],
       "normalScale": 0.5,
       "roughnessFactor": 1.0
+    },
+    "plaster": {
+      "baseColor": "walls/househub_wall_plaster_albedo_2k.jpg",
+      "normal": "walls/househub_wall_plaster_normal_2k.png",
+      "roughness": "walls/househub_wall_plaster_roughness_2k.jpg",
+      "tileSizeMeters": [2.0, 2.0],
+      "normalScale": 0.35,
+      "roughnessFactor": 0.92
+    },
+    "ceilingPaint": {
+      "baseColor": "ceiling/househub_ceiling_albedo_2k.jpg",
+      "normal": "ceiling/househub_ceiling_normal_2k.png",
+      "roughness": "ceiling/househub_ceiling_roughness_2k.jpg",
+      "tileSizeMeters": [3.0, 3.0],
+      "normalScale": 0.1,
+      "roughnessFactor": 0.97
     }
   }
 }
