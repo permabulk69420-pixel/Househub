@@ -58,7 +58,7 @@ export class ApartmentBuilder {
     for(const a of Object.keys(g.attributes))if(!['position','normal','uv','uv1','color'].includes(a))g.deleteAttribute(a);
     // Retain indexed geometry: richer curved meshes need not triple the vertex buffers.
     if(!g.index){const old=g;g=mergeVertices(old,1e-5);old.dispose();}
-    const mesh=new THREE.Mesh(g,this.materials[slot]);mesh.name=fullName,isGlass=GLASS_SLOTS.has(slot);
+    const mesh=new THREE.Mesh(g,this.materials[slot]),isGlass=GLASS_SLOTS.has(slot);mesh.name=fullName;
     mesh.castShadow=options.castShadow!==false&&!isGlass&&!['warmLight','dimLight'].includes(slot);mesh.receiveShadow=options.receiveShadow!==false&&!isGlass;
     mesh.userData={zone:this.zone,materialSlot:slot,sourceName:mesh.name,uvUnits:'meters',...options};
     this.root.add(mesh);this.parts.push(mesh);this.stats.sourceMeshes++;return mesh;
