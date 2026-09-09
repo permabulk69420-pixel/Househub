@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#171a18" />
+    <meta name="description" content="Househub — a luxury apartment to explore in standalone VR." />
+    <link rel="icon" href="data:," />
+    <title>Househub</title>
+  </head>
+  <body>
+    <canvas id="scene" aria-label="Househub apartment"></canvas>
+    <div id="loading" role="status"><div class="loading-mark">H<span>H</span></div><p>Opening Househub</p></div>
+    <main id="hud">
+      <div class="identity"><span class="wordmark">HOUSEHUB</span><span class="location" id="room-name">The apartment</span></div>
+      <div class="controls">
+        <p id="hint">Drag to look · WASD to walk</p>
+        <div class="buttons"><button id="walk">Explore</button><button id="vr" disabled>Checking VR…</button><button id="settings-toggle" class="icon-button" aria-label="Open controls" aria-expanded="false">☰</button></div>
+      </div>
+      <section id="settings" hidden aria-label="Exploration controls">
+        <div class="settings-title">Make yourself at home<button id="settings-close" aria-label="Close controls">×</button></div>
+        <p>Quest: left stick to move. Right stick to turn. Hold either trigger to aim a teleport, then release.</p>
+        <label>Turning<select id="turn-style"><option value="smooth">Smooth</option><option value="snap">Snap · 30°</option></select></label>
+        <label>Walking speed<select id="move-speed"><option value="1.6">Relaxed</option><option value="2.6">Brisk</option></select></label>
+        <button id="reset-position">Return to the entrance</button>
+      </section>
+    </main>
+    <div id="touch-controls" hidden><div id="move-pad" aria-label="Drag to walk"><span></span></div></div>
+    <div id="crosshair" hidden></div>
+    <div id="message" role="status" hidden></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
