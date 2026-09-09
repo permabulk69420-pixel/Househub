@@ -5,7 +5,7 @@ import { loungeChair,diningChair,sofa,bed } from '../src/furniture.js';
 import { Navigation } from '../src/navigation.js';
 
 // Build the actual scene; this checks geometry and navigation, not GPU or headset performance.
-const keys=['oak','walnut','travertine','plaster','linen','rug','leather','darkStone','darkFabric','ceramic','brass','blackMetal','whitePaint','black','screen','mirror','paper','bookRust','bookOlive','leaf','soil','warmLight','dimLight','glass'];
+const keys=['oak','walnut','travertine','plaster','ceilingPaint','linen','rug','leather','darkStone','darkFabric','ceramic','brass','blackMetal','whitePaint','black','screen','mirror','paper','bookRust','bookOlive','leaf','soil','warmLight','dimLight','glass'];
 const materials=Object.fromEntries(keys.map(name=>[name,Object.assign(new THREE.MeshStandardMaterial(),{name})]));
 const apartment=buildApartment(materials);
 assert(isWalkable(apartment.colliders,SPAWN.x,SPAWN.z),'Spawn must be clear');
