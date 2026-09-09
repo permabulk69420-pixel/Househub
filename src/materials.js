@@ -92,9 +92,9 @@ export function createMaterials(renderer) {
 
 export async function loadMaterialOverrides(materials,renderer) {
   const root=new URL('assets/materials/',document.baseURI);
-  const response=await fetch(new URL('manifest.json',root));
+  const response=await fetch(new URL('manifest.json',root),{cache:'no-store'});
   if(!response.ok)throw new Error(`Material manifest: HTTP ${response.status}`);
-  const manifest=await response.json(),loader=new THREE.TextureLoader();
+  const manifest=await response.json(),loader=new THREE.TextureLoader(),revision=String(manifest.version??1);
   const channels={baseColor:'map',normal:'normalMap',roughness:'roughnessMap',metalness:'metalnessMap',ao:'aoMap'};
   for(const [slot,spec] of Object.entries(manifest.materials??{})) {
     const m=materials[slot];if(!m){console.warn(`Unknown material slot: ${slot}`);continue;}
@@ -103,7 +103,8 @@ export async function loadMaterialOverrides(materials,renderer) {
     for(const [key,target] of Object.entries(channels)) {
       if(!spec[key])continue;
       try {
-        const texture=await loader.loadAsync(new URL(spec[key],root).href);
+        const textureUrl=new URL(spec[key],root);textureUrl.searchParams.set('v',revision);
+        const texture=await loader.loadAsync(textureUrl.href);
         texture.colorSpace=key==='baseColor'?THREE.SRGBColorSpace:THREE.NoColorSpace;
         texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.set(1/tile[0],1/tile[1]);texture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
         texture.channel=0;m[target]=texture;
