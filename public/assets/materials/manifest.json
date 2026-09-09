@@ -7,6 +7,13 @@
       "roughness": "oak/wooden_floor_01_roughness_2k.png",
       "tileSizeMeters": [2.2, 2.2],
       "normalScale": 0.65
+    },
+    "travertine": {
+      "baseColor": "travertine/white-marble_albedo.png",
+      "normal": "travertine/white-marble_normal-ogl.png",
+      "tileSizeMeters": [1.6, 1.6],
+      "normalScale": 0.45,
+      "roughnessFactor": 0.55
     }
   }
 }
