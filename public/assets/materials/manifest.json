@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "materials": {
     "oak": {
       "baseColor": "oak/wooden_floor_01_diff_2k.jpg",
