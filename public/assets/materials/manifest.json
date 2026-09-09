@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "materials": {
     "oak": {
       "baseColor": "oak/wooden_floor_01_diff_2k.jpg",
@@ -14,6 +14,14 @@
       "tileSizeMeters": [1.6, 1.6],
       "normalScale": 0.45,
       "roughnessFactor": 0.55
+    },
+    "walnut": {
+      "baseColor": "walnut/lacquered_cherry_wood_diff_2k.jpg",
+      "normal": "walnut/lacquered_cherry_wood_normal_2k.png",
+      "roughness": "walnut/lacquered_cherry_wood_roughness_satin_2k.png",
+      "tileSizeMeters": [1.2, 2.4],
+      "normalScale": 0.5,
+      "roughnessFactor": 1.0
     }
   }
 }
