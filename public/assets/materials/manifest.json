@@ -1,4 +1,12 @@
 {
   "version": 1,
-  "materials": {}
+  "materials": {
+    "oak": {
+      "baseColor": "oak/wooden_floor_01_diff_2k.jpg",
+      "normal": "oak/wooden_floor_01_normal_2k.png",
+      "roughness": "oak/wooden_floor_01_roughness_2k.png",
+      "tileSizeMeters": [2.2, 2.2],
+      "normalScale": 0.65
+    }
+  }
 }
