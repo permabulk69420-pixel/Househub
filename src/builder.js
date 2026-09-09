@@ -6,6 +6,7 @@ export const BOUNDS={minX:-14,maxX:14,minZ:-11,maxZ:11,height:4.15};
 
 // Explicit scene omissions can be handled here without disturbing the source layout code.
 const OMITTED_SCENE_PARTS=new Set(['Companion_Table_Stem','Companion_Table_Top','Companion_Table']);
+const GLASS_SLOTS=new Set(['glass','windowGlass','showerGlass']);
 
 export class ApartmentBuilder {
   constructor(materials) {
@@ -25,6 +26,10 @@ export class ApartmentBuilder {
   mesh(name,g,slot,position=[0,0,0],rotation=[0,0,0],scale=[1,1,1],options={}) {
     const fullName=this.prefix+name;if(OMITTED_SCENE_PARTS.has(fullName)){g.dispose();return null;}
     if(slot==='plaster'&&(/_Ceiling_Raft$/.test(fullName)||fullName==='Insulated_Roof'))slot='ceilingPaint';
+    if(slot==='glass'){
+      if((/^North_Glass_\d+$/.test(fullName)||fullName==='West_Glass')&&this.materials.windowGlass)slot='windowGlass';
+      else if(/^Shower_Glass_/.test(fullName)&&this.materials.showerGlass)slot='showerGlass';
+    }
     if(!this.materials[slot])throw new Error('Missing material '+slot);
     g.scale(...scale);
     const p=g.attributes.position,n=g.attributes.normal,uv=new Float32Array(p.count*2);
@@ -53,8 +58,8 @@ export class ApartmentBuilder {
     for(const a of Object.keys(g.attributes))if(!['position','normal','uv','uv1','color'].includes(a))g.deleteAttribute(a);
     // Retain indexed geometry: richer curved meshes need not triple the vertex buffers.
     if(!g.index){const old=g;g=mergeVertices(old,1e-5);old.dispose();}
-    const mesh=new THREE.Mesh(g,this.materials[slot]);mesh.name=fullName;
-    mesh.castShadow=options.castShadow!==false&&!['glass','warmLight','dimLight'].includes(slot);mesh.receiveShadow=options.receiveShadow!==false;
+    const mesh=new THREE.Mesh(g,this.materials[slot]);mesh.name=fullName,isGlass=GLASS_SLOTS.has(slot);
+    mesh.castShadow=options.castShadow!==false&&!isGlass&&!['warmLight','dimLight'].includes(slot);mesh.receiveShadow=options.receiveShadow!==false&&!isGlass;
     mesh.userData={zone:this.zone,materialSlot:slot,sourceName:mesh.name,uvUnits:'meters',...options};
     this.root.add(mesh);this.parts.push(mesh);this.stats.sourceMeshes++;return mesh;
   }
