@@ -88,6 +88,13 @@ export function createMaterials(renderer) {
   add('dimLight',{color:0xf7dba8,emissive:0xffcb85,emissiveIntensity:.5,roughness:1});
   materials.glass=new THREE.MeshStandardMaterial({name:'glass',color:0xb4cecb,metalness:.25,roughness:.06,transparent:true,opacity:.10,depthWrite:false,side:THREE.DoubleSide});
   materials.glass.userData.slot='glass';
+  // Large architectural glazing gets stronger reflections and a restrained neutral tint without
+  // framebuffer transmission/refraction. This keeps the shader practical for standalone Quest 3.
+  materials.windowGlass=new THREE.MeshPhysicalMaterial({name:'windowGlass',color:0xd8e5e4,metalness:0,roughness:.10,transparent:true,opacity:.14,depthWrite:false,side:THREE.FrontSide,envMapIntensity:1.45,clearcoat:1,clearcoatRoughness:.045,ior:1.5,specularIntensity:1});
+  materials.windowGlass.userData.slot='windowGlass';
+  // Shower glass is slightly milkier/rougher so it reads as a separate interior material.
+  materials.showerGlass=new THREE.MeshPhysicalMaterial({name:'showerGlass',color:0xd9ebe8,metalness:0,roughness:.16,transparent:true,opacity:.20,depthWrite:false,side:THREE.FrontSide,envMapIntensity:1.25,clearcoat:1,clearcoatRoughness:.08,ior:1.45,specularIntensity:.95});
+  materials.showerGlass.userData.slot='showerGlass';
   return materials;
 }
 
