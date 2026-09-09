@@ -4,6 +4,9 @@ import { mergeGeometries,mergeVertices } from 'three/addons/utils/BufferGeometry
 
 export const BOUNDS={minX:-14,maxX:14,minZ:-11,maxZ:11,height:4.15};
 
+// Explicit scene omissions can be handled here without disturbing the source layout code.
+const OMITTED_SCENE_PARTS=new Set(['Companion_Table_Stem','Companion_Table_Top','Companion_Table']);
+
 export class ApartmentBuilder {
   constructor(materials) {
     this.materials=materials;this.root=new THREE.Group();this.root.name='Househub_Apartment';
@@ -15,10 +18,12 @@ export class ApartmentBuilder {
     this.prefix+=name+'_';try{fn();}finally{this.frame=previous;this.prefix=oldPrefix;}
   }
   block(name,x,z,w,d,options={}) {
+    const fullName=this.prefix+name;if(OMITTED_SCENE_PARTS.has(fullName))return;
     const corners=[[-1,-1],[-1,1],[1,-1],[1,1]].map(([a,c])=>new THREE.Vector3(x+a*w/2,0,z+c*d/2).applyMatrix4(this.frame));
-    this.colliders.push({name:this.prefix+name,blocksTeleport:/Wall|Divider|Glazing|Glass|Partition|Spine|Tall_Cabinets/.test(this.prefix+name),...options,minX:Math.min(...corners.map(p=>p.x)),maxX:Math.max(...corners.map(p=>p.x)),minZ:Math.min(...corners.map(p=>p.z)),maxZ:Math.max(...corners.map(p=>p.z))});
+    this.colliders.push({name:fullName,blocksTeleport:/Wall|Divider|Glazing|Glass|Partition|Spine|Tall_Cabinets/.test(fullName),...options,minX:Math.min(...corners.map(p=>p.x)),maxX:Math.max(...corners.map(p=>p.x)),minZ:Math.min(...corners.map(p=>p.z)),maxZ:Math.max(...corners.map(p=>p.z))});
   }
   mesh(name,g,slot,position=[0,0,0],rotation=[0,0,0],scale=[1,1,1],options={}) {
+    const fullName=this.prefix+name;if(OMITTED_SCENE_PARTS.has(fullName)){g.dispose();return null;}
     if(!this.materials[slot])throw new Error('Missing material '+slot);
     g.scale(...scale);
     const p=g.attributes.position,n=g.attributes.normal,uv=new Float32Array(p.count*2);
@@ -47,7 +52,7 @@ export class ApartmentBuilder {
     for(const a of Object.keys(g.attributes))if(!['position','normal','uv','uv1','color'].includes(a))g.deleteAttribute(a);
     // Retain indexed geometry: richer curved meshes need not triple the vertex buffers.
     if(!g.index){const old=g;g=mergeVertices(old,1e-5);old.dispose();}
-    const mesh=new THREE.Mesh(g,this.materials[slot]);mesh.name=this.prefix+name;
+    const mesh=new THREE.Mesh(g,this.materials[slot]);mesh.name=fullName;
     mesh.castShadow=options.castShadow!==false&&!['glass','warmLight','dimLight'].includes(slot);mesh.receiveShadow=options.receiveShadow!==false;
     mesh.userData={zone:this.zone,materialSlot:slot,sourceName:mesh.name,uvUnits:'meters',...options};
     this.root.add(mesh);this.parts.push(mesh);this.stats.sourceMeshes++;return mesh;
