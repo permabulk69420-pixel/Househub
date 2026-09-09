@@ -1,13 +1,18 @@
 # Househub
 
-A furnished luxury apartment in Three.js, built for exploration on standalone
-Meta Quest 3. This first pass focuses on the environment: an open living room,
-kitchen and dining area, bedroom, bathroom, and connecting gallery. The apartment
-is approximately 18 × 14 metres, with 3.25 m ceilings. Outside is a simple sky.
+A furnished luxury residence and future VR home hub in Three.js, built for
+standalone Meta Quest 3. The environment occupies **28 × 22 metres (616 m²)**,
+with **4.15 m main ceilings**. Furniture stays at human scale.
+
+This revision replaces the original 18 × 14 m apartment. It includes a main
+living room, separate window salon, eight-seat dining room, kitchen with a
+four-seat island, primary bedroom and dressing area, double-vanity bathroom
+with a walk-in shower, private entry gallery, and a dedicated four-door hub gallery.
+Outside is a simple sky; connected destinations are for a later pass.
 
 ## Open it
 
-GitHub Pages: **https://permabulk69420-pixel.github.io/Househub/**
+**[Open Househub](https://permabulk69420-pixel.github.io/Househub/)**
 
 Open the page in Meta Quest Browser and choose **Enter VR**.
 
@@ -19,56 +24,114 @@ Open the page in Meta Quest Browser and choose **Enter VR**.
 | Desktop | Explore locks the mouse; Escape releases it; Shift walks faster |
 | Phone | Drag the room to look; use the left pad to walk |
 
-The controls menu offers smooth or 30° snap turning, two walking speeds, and a
-return to the entrance. Smooth turning is the default. Virtual movement collides
-with walls and furniture. Teleporting validates the landing and rejects paths
-through walls. Physical room-scale movement remains headset-tracked.
+The controls menu offers smooth or 30° snap turning, two walking speeds, and
+return to the initial living-room view. Smooth turning is the default. Virtual
+movement collides with walls and furniture; teleporting validates both the landing
+and the intervening partitions. Physical room-scale movement remains headset-tracked.
+
+## Environment and furniture
+
+Chairs have continuous rear supports, shaped seats, solid curved backrests, and
+closed walnut shells. Furniture is assembled in local coordinate frames, so
+reclining a cushion and then turning the chair does not skew its back. The sofa
+has a continuous supported back, a full chaise cushion, piping, and a draped throw.
+The bed has separate upholstery, bedding, feet, a headboard, and bedside joinery.
+
+Rounded stone countertops use independent corner and edge radii. Kitchen sinks
+and the fireplace are real recesses. The bathtub has a continuous inner and outer
+shell; curtains have folds and front/rear faces. Cabinet reveals, timber flutes,
+light fittings, shelves, tableware, art, books, and individually modelled foliage
+supply detail at room and hand scale.
 
 ## Materials and future texture work
 
-The scene already has generated oak, walnut, travertine, plaster, fabric, rug,
-leather, and dark stone maps, plus metal and ceramic PBR materials. These are
-generated locally from deterministic functions; there are no runtime CDN requests.
+The scene includes deterministic, locally generated oak, walnut, travertine,
+plaster, fabric, rug, leather, and dark stone maps, plus metal, glass, mirror, and
+ceramic PBR materials. There are no runtime CDN requests.
 
-Add replacement maps in **`public/assets/materials/`** and update its
-**`manifest.json`**. See that folder's README for an example and the complete slot
-list. Base color, normal, roughness, metalness, and AO channels are supported.
-UV0 measures metres, and the manifest specifies each texture's physical tile size.
-Every mesh has normals and UV attributes, including rounded furniture and stonework.
-UV1 is reserved but is **not** a uniquely unwrapped lightmap atlas.
+Place replacement maps in **`public/assets/materials/`** and update its
+**`manifest.json`**. The folder's [texture guide](public/assets/materials/README.md)
+shows the format. Base color, normal, roughness, metalness, and AO are supported.
 
-`src/apartment.js` retains descriptive names and material assignments for each
-authored part. At startup, static pieces are batched by room, material, and shadow
-settings. Each resulting batch retains its source part names in `userData.parts`.
-Edit the named source pieces to change furniture; change a material slot to update
-every piece that uses it.
+UV0 measures metres; the manifest supplies each texture's physical tile size.
+Planar projections are assigned in each piece's local frame before placement, so
+wood grain follows the furniture's orientation. Curved backrests and draped cloth
+have their own parametric UVs. Normals, UV0, and UV1 are retained on every mesh.
+**UV1 is a placeholder, not a uniquely unwrapped lightmap atlas.** Tileable AO
+uses UV0; a future baked-lighting pass must supply a separate atlas.
 
-## Lighting and rendering budget
+| Source | Purpose |
+| --- | --- |
+| `src/environment.js` | Floor plan, architecture, room arrangements, views, portal anchors |
+| `src/furniture.js` | Reusable chairs, sofa, bed, lighting, joinery, plants and objects |
+| `src/geometry.js` | Shaped upholstery, solid curved backs, cloth, arches and stone slabs |
+| `src/builder.js` | Local transforms, metric UVs, collision bounds and static batching |
+| `src/materials.js` | Shared material slots, fallback textures and PBR overrides |
+| `src/apartment.js` | Public scene API, contact shadows and walkable-area queries |
+| `src/navigation.js` | Desktop, touch and WebXR movement |
 
-- Roughly 135K triangles and 80 static material batches before visibility culling.
-- One 2048² directional shadow map, generated once; two local lights without shadows.
-- Static vertex shading and soft contact-shadow decals ground the furniture.
-- A reflection probe captures the apartment once. Reflections are approximate;
-  the vanity panel is smoked reflective glass, not a live planar mirror.
-- No bloom, screen-space AO, real-time reflection passes, physics engine, or imported
-  environment assets. Antialiasing, a capped desktop pixel ratio, and XR foveation
-  keep the renderer modest. Actual Quest frame rate still needs headset measurement.
+Static pieces are batched by room, material and shadow settings. Each batch
+retains its authored part names in `userData.parts` for inspection. Bedroom and
+bathroom materials use local reflection probes after material overrides are loaded.
 
-Lights and furnishings are static in this pass. If a future feature moves a shadow
-caster or changes the sun, set `renderer.shadowMap.needsUpdate = true`; refresh
-the reflection probe when appropriate. Realistic baked GI and replacement PBR maps
-can be added later without changing the apartment layout.
+## Rendering and validation
+
+The full scene currently contains **1,048,596 triangles**, **121 static material
+batches**, and **2,721 authored pieces**, before contact decals and controller
+visuals. Indexed geometry occupies approximately **44 MB** of GPU attribute/index
+buffers. These are whole-scene totals, not the triangles visible in a particular view.
+
+- One cached 2048² directional shadow map and four shadowless practical lights.
+- Static vertex shading and soft contact decals ground the furniture.
+- Three reflection probes capture the public rooms, bedroom and bathroom once.
+  The vanity mirrors use the bathroom probe; reflections are approximate and
+  do not reflect the player or moving objects like a live planar mirror would.
+- No bloom, screen-space AO, per-frame reflection captures or physics engine.
+- Desktop pixel ratio is capped at 2; XR uses framebuffer scale 1 and foveation .45.
+
+These choices preserve geometry quality while controlling rendering cost.
+**Quest frame rate, thermal behaviour, controller input and final WebGL shader
+appearance have not been measured on a headset in this development session.**
+The scene's larger geometry budget is not a measured performance guarantee.
+If a future feature moves a shadow caster or changes the sun, refresh the shadow
+map; refresh the relevant reflection probe when the environment changes.
+
+`npm run check` builds the real scene and verifies attributes, finite unit normals,
+indexed buffers, collision openings, and reachability across the complete floor.
+It reaches every room, the dressing area, shower, WC and all four future hub doors.
+It also checks that furniture rotation preserves its vertical shape and local UVs,
+that the sofa and bed reach the floor, and that XR turns preserve an off-centre
+tracked head position. Geometry ceilings in the check catch accidental growth;
+they are not a substitute for headset profiling.
+
+The images in [docs/previews](docs/previews) were inspected individually and by
+room, including the front and rear of chairs. They show the actual authored meshes
+and procedural textures with **approximate offline lighting**. They are not browser
+or headset screenshots: the development browser did not provide a WebGL context.
+
+![Main living room — offline geometry preview](docs/previews/living.jpg)
+![Dining room — offline geometry preview](docs/previews/dining.jpg)
 
 ## VR origin and future hub doors
 
-One world unit equals one metre. +Y is up; the floor is Y=0. The player rig uses a
+One world unit equals one metre; +Y is up and the floor is Y=0. The player uses a
 `local-floor` reference space and the headset's measured height. The desktop eye
-height is removed on entering VR, avoiding a doubled eye-height offset. Turning
-pivots around the tracked head, including when the player is standing off-center.
+height is removed on entering VR, preventing a doubled height offset. Turning
+pivots around the tracked head even when standing away from the tracking origin.
 
-Stable empty anchors: `PlayerSpawn`, `HubDoor_Entry`, `HubDoor_Hall`.
-The doors are environment pieces; no external repo navigation is enabled yet.
-More portal bays or other layouts can be added when those destinations are connected.
+| Anchor | Position `[x, y, z]` | Purpose |
+| --- | --- | --- |
+| `PlayerSpawn` | `[-7.5, 0, -1.05]` | Initial living-room view |
+| `HubDoor_01` | `[-11.5, 0, 10.72]` | Gallery bay 1 |
+| `HubDoor_02` | `[-7.9, 0, 10.72]` | Gallery bay 2 |
+| `HubDoor_03` | `[-4.3, 0, 10.72]` | Gallery bay 3 |
+| `HubDoor_04` | `[0, 0, 10.72]` | Gallery bay 4 |
+| `HubDoor_Entry` | `[0, 0, 10.72]` | Retained alias for bay 4 |
+| `HubDoor_Hall` | `[13.72, 0, 1]` | Private gallery entrance |
+
+The four gallery anchors have yaw π. The private entrance has yaw π/2. Doors are
+closed environmental pieces with clear approach space; cross-repo routing and
+room transitions are not implemented yet.
 
 ## Development and deployment
 
@@ -83,15 +146,6 @@ The Actions workflow builds and publishes `dist/` on pushes to `main`. Keep Page
 configured to deploy from **GitHub Actions**. Relative build URLs support the
 repository subpath. Three.js and Vite versions are pinned in the lockfile.
 
-`npm run check` builds the real scene in Node, validates mesh attributes and geometry
-budgets, tests blocked and open positions, and flood-fills the navigation area to
-verify that the rooms, gallery, and shower can all be reached from the spawn.
-
-Optional inspection URLs: `?stats=1`, or `?view=living`, `?view=kitchen`,
-`?view=bedroom`, `?view=bathroom`. Add `&clean=1` for an unobstructed view.
-
-The offline images in `docs/previews/` show the authored geometry and material
-textures with approximate lighting. They are not browser or headset captures:
-the development browser in this session did not provide a WebGL context.
-The production build and navigation checks were verified; headset appearance,
-controller input, frame rate, and actual shader output still need a Quest test.
+Inspection URLs: `?stats=1`, or `?view=living`, `?view=kitchen`, `?view=dining`,
+`?view=reading`, `?view=bedroom`, `?view=dressing`, `?view=bathroom`, `?view=vanity`,
+`?view=gallery`. Add `&clean=1` for an unobstructed view.

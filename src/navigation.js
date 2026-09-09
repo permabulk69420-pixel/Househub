@@ -104,7 +104,7 @@ export class Navigation {
     const steps=Math.ceil(Math.hypot(x1-x0,z1-z0)/.07);
     for(let i=1;i<=steps;i++) {
       const x=x0+(x1-x0)*i/steps,z=z0+(z1-z0)*i/steps;
-      for(const c of this.colliders){if(!/Wall|Divider|Glazing|Glass/.test(c.name))continue;if(x>c.minX-.025&&x<c.maxX+.025&&z>c.minZ-.025&&z<c.maxZ+.025)return false;}
+      for(const c of this.colliders){if(!c.blocksTeleport)continue;if(x>c.minX-.025&&x<c.maxX+.025&&z>c.minZ-.025&&z<c.maxZ+.025)return false;}
     }
     return true;
   }

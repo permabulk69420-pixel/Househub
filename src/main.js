@@ -10,10 +10,10 @@ function notify(text) {message.textContent=text;message.hidden=false;clearTimeou
 
 async function start() {
   const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
-  renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));renderer.setSize(innerWidth,innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);
   renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
   renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-  renderer.xr.enabled=true;renderer.xr.setReferenceSpaceType('local-floor');renderer.xr.setFramebufferScaleFactor(1);renderer.xr.setFoveation(.65);
+  renderer.xr.enabled=true;renderer.xr.setReferenceSpaceType('local-floor');renderer.xr.setFramebufferScaleFactor(1);renderer.xr.setFoveation(.45);
   const scene=new THREE.Scene();scene.name='Househub';scene.background=new THREE.Color(0xbbc9cc);
   const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.065,160);camera.position.set(0,1.68,0);
   // A quiet, bright sky keeps the first pass focused on the interior.
@@ -24,24 +24,37 @@ async function start() {
   }));sky.name='Quiet_Sky';scene.add(sky);
   scene.add(new THREE.HemisphereLight(0xcbd7dd,0xa89b83,1.52));
   scene.add(new THREE.AmbientLight(0xffe5c5,.23));
-  const sun=new THREE.DirectionalLight(0xffedcf,3.4);sun.name='Window_Daylight';sun.position.set(-12,9,-11);sun.target.position.set(-2,0,0);scene.add(sun,sun.target);
-  sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-13;sun.shadow.camera.right=13;sun.shadow.camera.top=12;sun.shadow.camera.bottom=-12;sun.shadow.camera.near=.1;sun.shadow.camera.far=45;sun.shadow.normalBias=.025;sun.shadow.bias=-.00012;sun.shadow.radius=3;
-  // Two shadowless local lights add practical-light warmth. All shadows are cached.
-  const kitchenGlow=new THREE.PointLight(0xffd5a0,15,7,2);kitchenGlow.position.set(-4.8,2.35,4.5);scene.add(kitchenGlow);
-  const suiteGlow=new THREE.PointLight(0xffd5a0,9,7,2);suiteGlow.position.set(6.0,2.6,-2.6);scene.add(suiteGlow);
+  const sun=new THREE.DirectionalLight(0xffedcf,3.4);sun.name='Window_Daylight';sun.position.set(-24,14,-23);sun.target.position.set(-3,0,-1);scene.add(sun,sun.target);
+  sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-20;sun.shadow.camera.right=20;sun.shadow.camera.top=17;sun.shadow.camera.bottom=-17;sun.shadow.camera.near=.1;sun.shadow.camera.far=75;sun.shadow.normalBias=.025;sun.shadow.bias=-.00012;sun.shadow.radius=3;
+  // Four static practical lights provide warm local falloff; the directional shadow is cached.
+  for(const [name,x,y,z,power,reach] of [
+    ['Kitchen_Pendant',-9.3,2.75,3.1,28,10],['Dining_Pendant',-.2,2.78,3.65,20,9],
+    ['Suite_Cove',8.7,2.95,-6.4,18,9],['Bath_Cove',8.5,2.95,7.5,20,9],
+  ]){const glow=new THREE.PointLight(0xffd5a0,power,reach,2);glow.name=name;glow.position.set(x,y,z);scene.add(glow);}
   const pmrem=new THREE.PMREMGenerator(renderer),environment=new RoomEnvironment();
   const initialEnvironment=pmrem.fromScene(environment,.04);scene.environment=initialEnvironment.texture;scene.environmentIntensity=.64;environment.dispose();
   const materials=createMaterials(renderer);
   try{await loadMaterialOverrides(materials,renderer);}catch(error){console.warn(error.message);}
   const apartment=buildApartment(materials);scene.add(apartment.root);addContactShadows(apartment);
   const navigation=new Navigation({renderer,camera,scene,colliders:apartment.colliders,canvas});
-  // A static reflection probe captures the finished apartment once, before entering VR.
-  const cubeTarget=new THREE.WebGLCubeRenderTarget(128,{type:THREE.HalfFloatType,generateMipmaps:true,minFilter:THREE.LinearMipmapLinearFilter});
-  const probe=new THREE.CubeCamera(.1,110,cubeTarget);probe.position.set(-2.2,1.55,-1.5);probe.update(renderer,scene);
-  const reflectedEnvironment=pmrem.fromCubemap(cubeTarget.texture);scene.environment=reflectedEnvironment.texture;scene.environmentIntensity=.76;
-  initialEnvironment.dispose();cubeTarget.dispose();pmrem.dispose();
-  // Updating map content never requires rendering the static scene's shadows again.
+  // Cache the directional shadow before any cube captures, so startup does not redraw it per face.
   renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true;
+  function captureEnvironment(position){
+    const cubeTarget=new THREE.WebGLCubeRenderTarget(128,{type:THREE.HalfFloatType,generateMipmaps:true,minFilter:THREE.LinearMipmapLinearFilter});
+    const probe=new THREE.CubeCamera(.1,110,cubeTarget);probe.position.fromArray(position);probe.update(renderer,scene);
+    const result=pmrem.fromCubemap(cubeTarget.texture);cubeTarget.dispose();return result;
+  }
+  // Separate static probes keep the suite and bathroom reflections inside their own rooms.
+  const reflectedEnvironment=captureEnvironment([-1.6,1.7,-5.1]);
+  scene.environment=reflectedEnvironment.texture;scene.environmentIntensity=.76;initialEnvironment.dispose();
+  for(const [zone,position] of [['bedroom',[8.4,1.7,-6.4]],['bathroom',[7.7,1.75,8.0]]]){
+    const mirrors=apartment.root.children.filter(o=>o.isMesh&&o.userData.zone===zone&&o.userData.materialSlot==='mirror');
+    mirrors.forEach(o=>{o.visible=false;});const local=captureEnvironment(position);mirrors.forEach(o=>{o.visible=true;});
+    for(const mesh of apartment.root.children){if(!mesh.isMesh||mesh.userData.zone!==zone)continue;
+      mesh.material=mesh.material.clone();mesh.material.envMap=local.texture;mesh.material.needsUpdate=true;
+    }
+  }
+  pmrem.dispose();
   const url=new URL(location.href),view=VIEWS[url.searchParams.get('view')];
   if(view){navigation.rig.position.set(0,0,0);navigation.rig.rotation.y=0;camera.position.fromArray(view.position);camera.lookAt(...view.target);}
   if(url.searchParams.has('clean'))document.querySelector('#hud').hidden=true;
@@ -76,7 +89,7 @@ async function start() {
     try{
       close();xrSession=await navigator.xr.requestSession('immersive-vr',{requiredFeatures:['local-floor'],optionalFeatures:['bounded-floor']});
       xrSession.addEventListener('end',()=>{xrSession=null;vrButton.textContent='Enter VR';},{once:true});
-      await renderer.xr.setSession(xrSession);renderer.xr.setFoveation(.65);vrButton.textContent='Exit VR';
+      await renderer.xr.setSession(xrSession);renderer.xr.setFoveation(.45);vrButton.textContent='Exit VR';
     }catch(error){xrSession=null;notify(`VR could not start: ${error.message}`);}
   });
 }

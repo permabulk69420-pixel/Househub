@@ -77,10 +77,11 @@ export function createMaterials(renderer) {
   add('whitePaint',{color:0xe4e2d9,roughness:.65});
   add('black',{color:0x111816,roughness:.6});
   add('screen',{color:0x10201e,metalness:.32,roughness:.22});
+  add('mirror',{color:0xd9dedb,metalness:1,roughness:.075,envMapIntensity:1.05});
   add('paper',{color:0xcec7ae,roughness:1});
   add('bookRust',{color:0x7b4938,roughness:.92});
   add('bookOlive',{color:0x656b54,roughness:.9});
-  add('leaf',{color:0x34442c,roughness:.92,side:THREE.DoubleSide});
+  add('leaf',{color:0x526047,roughness:.92,side:THREE.DoubleSide});
   add('soil',{color:0x2e271e,roughness:1});
   add('warmLight',{color:0xffe5b2,emissive:0xffd693,emissiveIntensity:2.3,roughness:1,toneMapped:false});
   add('dimLight',{color:0xf7dba8,emissive:0xffcb85,emissiveIntensity:.5,roughness:1});
