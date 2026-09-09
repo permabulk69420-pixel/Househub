@@ -24,6 +24,7 @@ export class ApartmentBuilder {
   }
   mesh(name,g,slot,position=[0,0,0],rotation=[0,0,0],scale=[1,1,1],options={}) {
     const fullName=this.prefix+name;if(OMITTED_SCENE_PARTS.has(fullName)){g.dispose();return null;}
+    if(slot==='plaster'&&(/_Ceiling_Raft$/.test(fullName)||fullName==='Insulated_Roof'))slot='ceilingPaint';
     if(!this.materials[slot])throw new Error('Missing material '+slot);
     g.scale(...scale);
     const p=g.attributes.position,n=g.attributes.normal,uv=new Float32Array(p.count*2);
