@@ -157,7 +157,7 @@ function living(b){
   slab(b,'Sofa_Side_Table_Top',.73,.70,.05,.24,[-4.17,.54,-3.44],'walnut');tableLamp(b,'Sofa_Side_Lamp',[-4.17,.568,-3.44]);b.block('Sofa_Side_Table',-4.17,-3.44,.78,.75);
   mediaWall(b);
   // A second, intimate conversation group makes the window wing a useful room in the hub.
-  b.zone='reading';rug(b,'Window_Salon_Rug',-10.8,-6.55,4.6,4.95,'linen');
+  b.zone='reading';rug(b,'Window_Salon_Rug',-10.8,-6.55,4.6,4.95);
   loungeChair(b,'Window_Chair_North',-10.30,-8.05,PI+.32,'linen');
   loungeChair(b,'Window_Chair_West',-12.0,-5.85,-1.10);
   b.cylinder('Reading_Table_Base',.18,.28,.535,[-10.45,.2675,-6.42],'darkStone',64);
@@ -226,7 +226,7 @@ function kitchen(b){
   slab(b,'Island_Pendant_Body',4.48,.19,.058,.085,[-9.30,2.52,3.10],'brass');slab(b,'Island_Pendant_Diffuser',4.39,.135,.018,.055,[-9.30,2.482,3.10],'dimLight');
 }
 function dining(b){
-  b.zone='dining';rug(b,'Dining_Rug',-.20,3.65,5.7,4.65,'linen');
+  b.zone='dining';rug(b,'Dining_Rug',-.20,3.65,5.7,4.65);
   for(const x of [-1.30,.90])slab(b,'Dining_Sculpted_Pedestal',.61,.79,.74,.23,[x,.37,3.65],'walnut');
   slab(b,'Dining_Table_Eased_Stone_Top',3.55,1.26,.08,.34,[-.20,.78,3.65]);b.block('Dining_Table',-.2,3.65,3.65,1.36);
   for(const [i,x] of [-1.42,-.20,1.02].entries()){
@@ -328,7 +328,7 @@ function bathroom(b){
 }
 function galleries(b){
   b.zone='hallway';
-  rug(b,'Private_Gallery_Runner',8.75,1.0,6.3,2.6,'linen');
+  rug(b,'Private_Gallery_Runner',8.75,1.0,6.3,2.6);
   relief(b,'Private_Gallery_Art',8.7,2.12,3.84,3.35,1.68);
   b.withFrame('Gallery_Console',[8.70,0,3.45],0,()=>{
     for(const px of [-1.55,1.55])b.box('Slab_Leg',[.14,.85,.44],[px,.425,0],'travertine',.022);
@@ -341,7 +341,7 @@ function galleries(b){
   b.box('Gallery_Panel_Shadow_Background',[16.72,3.40,.012],[-5.5,1.70,11.0],'black');
   for(let i=0;i<15;i++){const x=-13.5+i*1.08;b.box('Gallery_Wall_Panel',[1.066,3.37,.022],[x,1.70,11.00],'walnut',.007);}
   // Door leaves project into the room, ahead of the continuous wall panels.
-  rug(b,'Hub_Gallery_Runner',-5.5,9.31,15.9,1.39,'linen');
+  rug(b,'Hub_Gallery_Runner',-5.5,9.31,15.9,1.39);
   b.box('Gallery_North_Cladding',[9.1,3.25,.034],[-9.30,1.66,7.736],'walnut',.012);
   bench(b,'Hub_Gallery_Bench',-9.30,8.16,0,2.8);
   relief(b,'Hub_Gallery_Relief',-9.3,2.04,7.78,3.30,1.42,PI);
