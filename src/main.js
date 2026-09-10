@@ -11,20 +11,25 @@ function notify(text) {message.textContent=text;message.hidden=false;clearTimeou
 async function start() {
   const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
   renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);
-  renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
+  renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.02;
   renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   renderer.xr.enabled=true;renderer.xr.setReferenceSpaceType('local-floor');renderer.xr.setFramebufferScaleFactor(1);renderer.xr.setFoveation(.45);
-  const scene=new THREE.Scene();scene.name='Househub';scene.background=new THREE.Color(0xbbc9cc);
+  const scene=new THREE.Scene();scene.name='Househub';scene.background=new THREE.Color(0x3b4657);
   const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.065,160);camera.position.set(0,1.68,0);
-  // A quiet, bright sky keeps the first pass focused on the interior.
+  // Static golden-hour/twilight sky: cool upper sky, peach horizon and a warm north-west sunset glow.
+  const sunsetDir=new THREE.Vector3(-.68,.05,-.73).normalize();
   const sky=new THREE.Mesh(new THREE.SphereGeometry(100,24,16),new THREE.ShaderMaterial({
-    side:THREE.BackSide,depthWrite:false,uniforms:{top:{value:new THREE.Color(0x849eae)},horizon:{value:new THREE.Color(0xe9e5d8)},bottom:{value:new THREE.Color(0xaebcbb)}},
+    side:THREE.BackSide,depthWrite:false,uniforms:{
+      top:{value:new THREE.Color(0x3b4b68)},horizon:{value:new THREE.Color(0xe6ad7b)},bottom:{value:new THREE.Color(0x69717d)},
+      sunset:{value:new THREE.Color(0xffa05f)},sunsetDir:{value:sunsetDir},
+    },
     vertexShader:'varying vec3 vPosition; void main(){vPosition=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
-    fragmentShader:'varying vec3 vPosition;uniform vec3 top;uniform vec3 horizon;uniform vec3 bottom;void main(){float h=normalize(vPosition).y;vec3 c=h>0.0?mix(horizon,top,smoothstep(0.0,0.7,h)):mix(horizon,bottom,smoothstep(0.0,0.4,-h));gl_FragColor=vec4(c,1.0);\n#include <tonemapping_fragment>\n#include <colorspace_fragment>}',
-  }));sky.name='Quiet_Sky';scene.add(sky);
-  scene.add(new THREE.HemisphereLight(0xcbd7dd,0xa89b83,1.52));
-  scene.add(new THREE.AmbientLight(0xffe5c5,.23));
-  const sun=new THREE.DirectionalLight(0xffedcf,3.4);sun.name='Window_Daylight';sun.position.set(-24,14,-23);sun.target.position.set(-3,0,-1);scene.add(sun,sun.target);
+    fragmentShader:'varying vec3 vPosition;uniform vec3 top;uniform vec3 horizon;uniform vec3 bottom;uniform vec3 sunset;uniform vec3 sunsetDir;void main(){vec3 d=normalize(vPosition);float h=d.y;vec3 c=h>0.0?mix(horizon,top,smoothstep(0.0,0.72,h)):mix(horizon,bottom,smoothstep(0.0,0.35,-h));float toward=max(dot(d,normalize(sunsetDir)),0.0);float band=1.0-smoothstep(0.04,0.32,abs(h));float glow=pow(toward,4.0)*band;float core=pow(toward,48.0)*band;c=mix(c,sunset,glow*.55);c+=sunset*core*.30;gl_FragColor=vec4(c,1.0);\n#include <tonemapping_fragment>\n#include <colorspace_fragment>}',
+  }));sky.name='Golden_Hour_Sky';scene.add(sky);
+  scene.add(new THREE.HemisphereLight(0x71839f,0x6a5548,.82));
+  scene.add(new THREE.AmbientLight(0xffd1ad,.14));
+  // Low north-west sun pushes long warm light through the north/west glazing without adding any dynamic-light cost.
+  const sun=new THREE.DirectionalLight(0xffaa72,4.0);sun.name='Low_Sunset';sun.position.set(-30,5.5,-24);sun.target.position.set(-2,1,-2);scene.add(sun,sun.target);
   sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-20;sun.shadow.camera.right=20;sun.shadow.camera.top=17;sun.shadow.camera.bottom=-17;sun.shadow.camera.near=.1;sun.shadow.camera.far=75;sun.shadow.normalBias=.025;sun.shadow.bias=-.00012;sun.shadow.radius=3;
   // Four static practical lights provide warm local falloff; the directional shadow is cached.
   for(const [name,x,y,z,power,reach] of [
