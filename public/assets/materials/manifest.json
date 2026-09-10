@@ -1,5 +1,5 @@
 {
-  "version": 5,
+  "version": 6,
   "materials": {
     "oak": {
       "baseColor": "oak/wooden_floor_01_diff_2k.jpg",
@@ -47,6 +47,14 @@
       "normalScale": 0.45,
       "roughnessFactor": 1.0,
       "metalnessFactor": 1.0
+    },
+    "rug": {
+      "baseColor": "rug/househub_rug_albedo_1k.jpg",
+      "normal": "rug/househub_rug_normal_ogl_1k.jpg",
+      "roughness": "rug/househub_rug_roughness_1k.jpg",
+      "tileSizeMeters": [1.7, 1.7],
+      "normalScale": 0.7,
+      "roughnessFactor": 1.0
     }
   }
 }
