@@ -47,6 +47,10 @@ export class ApartmentBuilder {
     g.applyMatrix4(matrix);
     const color=new Float32Array(p.count*3);
     for(let i=0;i<p.count;i++) {
+      if(slot==='ceilingPaint'){
+        // Let real lighting and the shared plaster PBR maps shape the ceiling; avoid the old baked warm/dark underside tint.
+        color[i*3]=1;color[i*3+1]=1;color[i*3+2]=1;continue;
+      }
       const x=p.getX(i),y=p.getY(i),z=p.getZ(i),ny=n.getY(i);
       const wallDistance=Math.min(Math.abs(x-BOUNDS.minX),Math.abs(x-BOUNDS.maxX),Math.abs(z-BOUNDS.minZ),Math.abs(z-BOUNDS.maxZ));
       const contact=1-.13*Math.exp(-Math.max(y,0)*5),corner=ny>.4?1-.17*Math.exp(-wallDistance*3):1;
