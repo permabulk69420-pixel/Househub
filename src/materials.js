@@ -59,7 +59,6 @@ export function createMaterials(renderer) {
     walnut:{base:[91,65,43],tile:[1.2,2.4],roughness:.78,bump:.014},
     travertine:{base:[206,198,178],tile:[1.6,1.6],roughness:.68,bump:.022},
     plaster:{base:[226,224,215],tile:[1,1],roughness:1,bump:.008},
-    ceilingPaint:{base:[232,230,222],tile:[1,1],roughness:.96,bump:.003},
     linen:{base:[202,198,185],tile:[.42,.42],roughness:1,bump:.009},
     rug:{base:[157,151,136],tile:[.55,.55],roughness:1,bump:.009},
     leather:{base:[117,74,45],tile:[.5,.5],roughness:.82,bump:.01},
@@ -72,6 +71,9 @@ export function createMaterials(renderer) {
     add(name,{...maps,roughness:spec.roughness,bumpScale:spec.bump,envMapIntensity:.65});
     materials[name].userData.tileSizeMeters=spec.tile;
   }
+  // Ceiling paint is a cheap material variant: its PBR maps are shared with wall plaster at load time.
+  add('ceilingPaint',{color:0xf4f3ee,roughness:.97,envMapIntensity:.65});
+  materials.ceilingPaint.userData.tileSizeMeters=[2,2];
   add('ceramic',{color:0xe8e5dc,roughness:.23,envMapIntensity:.8});
   add('brass',{color:0xbba579,metalness:.88,roughness:.3});
   add('blackMetal',{color:0x242824,metalness:.72,roughness:.35});
@@ -104,6 +106,20 @@ export async function loadMaterialOverrides(materials,renderer) {
   if(!response.ok)throw new Error(`Material manifest: HTTP ${response.status}`);
   const manifest=await response.json(),loader=new THREE.TextureLoader(),revision=String(manifest.version??1);
   const channels={baseColor:'map',normal:'normalMap',roughness:'roughnessMap',metalness:'metalnessMap',ao:'aoMap'};
+  // Cache by source/channel/tiling so material variants can genuinely share one GPU texture allocation.
+  const textureCache=new Map();
+  async function loadTexture(path,key,tile){
+    const textureUrl=new URL(path,root);textureUrl.searchParams.set('v',revision);
+    const cacheKey=[textureUrl.href,key==='baseColor'?'srgb':'linear',tile[0],tile[1]].join('|');
+    if(!textureCache.has(cacheKey)){
+      textureCache.set(cacheKey,loader.loadAsync(textureUrl.href).then(texture=>{
+        texture.colorSpace=key==='baseColor'?THREE.SRGBColorSpace:THREE.NoColorSpace;
+        texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.set(1/tile[0],1/tile[1]);texture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+        texture.channel=0;return texture;
+      }).catch(error=>{textureCache.delete(cacheKey);throw error;}));
+    }
+    return textureCache.get(cacheKey);
+  }
   for(const [slot,spec] of Object.entries(manifest.materials??{})) {
     const m=materials[slot];if(!m){console.warn(`Unknown material slot: ${slot}`);continue;}
     const tile=spec.tileSizeMeters??m.userData.tileSizeMeters??[1,1];
@@ -111,11 +127,8 @@ export async function loadMaterialOverrides(materials,renderer) {
     for(const [key,target] of Object.entries(channels)) {
       if(!spec[key])continue;
       try {
-        const textureUrl=new URL(spec[key],root);textureUrl.searchParams.set('v',revision);
-        const texture=await loader.loadAsync(textureUrl.href);
-        texture.colorSpace=key==='baseColor'?THREE.SRGBColorSpace:THREE.NoColorSpace;
-        texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.set(1/tile[0],1/tile[1]);texture.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
-        texture.channel=0;m[target]=texture;
+        const texture=await loadTexture(spec[key],key,tile);
+        m[target]=texture;
         if(key==='normal'){m.bumpMap=null;m.normalScale.setScalar(spec.normalScale??1);}
         if(key==='baseColor')m.color.set(0xffffff);
       } catch(error){console.warn(`Keeping fallback ${slot}/${key}: ${error.message}`);}
