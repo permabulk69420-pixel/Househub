@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "materials": {
     "oak": {
       "baseColor": "oak/wooden_floor_01_diff_2k.jpg",
@@ -38,6 +38,15 @@
       "tileSizeMeters": [3.0, 3.0],
       "normalScale": 0.1,
       "roughnessFactor": 0.97
+    },
+    "brass": {
+      "baseColor": "gold/househub_gold_albedo_2k.jpg",
+      "normal": "gold/househub_gold_normal_ogl_2k.png",
+      "roughness": "gold/househub_gold_roughness_2k.jpg",
+      "tileSizeMeters": [0.35, 0.35],
+      "normalScale": 0.45,
+      "roughnessFactor": 1.0,
+      "metalnessFactor": 1.0
     }
   }
 }
